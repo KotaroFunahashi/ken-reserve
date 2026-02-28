@@ -1,0 +1,17 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "java.jdt.ls.java.home": "{set your JDK path here}",
+        "java.configuration.runtimes": [
+            {
+                "name": "JavaSE-21",
+                "path": "{set your JDK path here}",
+                "default": true
+            }
+        ]
+    }
+}

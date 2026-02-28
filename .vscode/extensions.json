@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "vscjava.vscode-java-debug",
+        "vmware.vscode-boot-dev-pack",
+        "ms-azuretools.vscode-docker",
+        "cweijan.vscode-database-client2",
+        "usernamehw.errorlens",
+        "vscjava.vscode-lombok",
+    ]
+}
