@@ -12,6 +12,19 @@
                 "path": "{set your JDK path here}",
                 "default": true
             }
-        ]
-    }
+        ],
+        "java.compile.nullAnalysis.mode": "automatic",
+        "java.completion.importOrder": [
+            "java",
+            "javax",
+            "com",
+            "org"
+        ],
+        "java.inlayHints.parameterNames.enabled": "all",
+        "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/master/eclipse-java-google-style.xml",
+        "terminal.integrated.env.windows": {
+            "JAVA_HOME": "${workspaceFolder}/.jdks/jdk-21",
+            "PATH": "${workspaceFolder}/.jdks/jdk-21/bin;${env:Path}"
+        },
+    }    }
 }
