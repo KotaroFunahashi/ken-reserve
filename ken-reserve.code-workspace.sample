@@ -26,5 +26,5 @@
             "JAVA_HOME": "${workspaceFolder}/.jdks/jdk-21",
             "PATH": "${workspaceFolder}/.jdks/jdk-21/bin;${env:Path}"
         },
-    }    }
+    }
 }
