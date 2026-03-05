@@ -12,10 +12,12 @@
 
 ## ✨ Features (主な機能)
 
-- 🗓️ **Flexible Scheduling**: カレンダー形式での授業予約・キャンセル管理。
-- 📝 **Study Reports**: 授業ごとの指導内容・宿題の記録と、保護者への共有支援。
-- 💰 **Billing Management**: 指導時間に基づいた月謝計算と支払いステータス管理。
-- 🔒 **Role-Based Access**: 講師（管理者）と生徒/保護者それぞれの専用マイページ（Spring Security）。
+- Main Target
+  - 🗓️ **Flexible Scheduling**: カレンダー形式での授業予約・キャンセル管理。
+- Future
+  - 📝 **Study Reports**: 授業ごとの指導内容・宿題の記録と、保護者への共有支援。
+  - 💰 **Billing Management**: 指導時間に基づいた月謝計算と支払いステータス管理。
+  - 🔒 **Role-Based Access**: 講師（管理者）と生徒/保護者それぞれの専用マイページ（Spring Security）。
 
 ---
 
@@ -37,7 +39,7 @@ src/main/java/com/coha9nus/kenreserve/
 ├── config/             # Security設定, WebMvc設定, MySQL接続設定
 ├── controller/         # 各画面のルーティング (GET/POST)
 ├── service/            # 予約重複バリデーション, 月謝計算ロジック
-├── repository/         # Spring Data JPA (Students, Lessons, Payments)
+├── repository/         # Spring Data JPA
 ├── entity/             # MySQLのテーブル定義に対応するEntity
 └── dto/                # 画面からの入力値を保持するデータクラス
 src/main/resources/
