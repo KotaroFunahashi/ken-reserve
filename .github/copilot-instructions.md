@@ -10,12 +10,17 @@
   - Business Logic -> `requirements.md` (Always verify before implementation).
   - Setup/Env -> `README.md`.
 
+# Development Process (Strict)
+- **TDD Enforcement**: ALWAYS write a failing test before implementing logic.
+- **CI/CD Integration**: Every feature must pass GitHub Actions.
+- **Integration Tests**: Use **Testcontainers (MySQL)** for repository and integration tests. Avoid `@SpringBootTest` unless necessary; prefer sliced tests (e.g., `@DataJpaTest`).
+
 # Coding Standards (Strict)
 
 ## 1. Layering & DTOs
 - **Entity Boundary**: The Service layer MUST be the boundary. **NEVER return Entities to Controllers.**
 - **DTO Mandatory**: Always convert Entities to DTOs (Records) within Services.
-- **Persistence**: Entities are strictly for JPA/Repository mapping. No domain logic in Entities.
+- **Persistence**: Entities are strictly for JPA mapping. No logic in Entities.
 
 ## 2. Modern Java & Quality
 - **Java 21**: Use `record` for DTOs, Pattern Matching, and Sealed Classes.
