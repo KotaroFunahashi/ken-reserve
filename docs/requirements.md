@@ -88,14 +88,3 @@ erDiagram
     }
 
 ```
-
-## 6. 技術スタック
-
-* **Language:** Java 21
-* **Framework:** Spring Boot 4.0.3 (Spring Security, Spring Data JPA)
-* **Build Tool:** Gradle 9.3.1
-* **DB:** MySQL
-* **Template Engine:** Thymeleaf (SSR)
-* **Security:**
-  * パスワードはハッシュ化して保存。
-* DBにはメールアドレスや電話番号等の機密情報は保持しない（名前とIDのみ）。
