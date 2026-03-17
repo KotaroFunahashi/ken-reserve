@@ -1,12 +1,11 @@
+<a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring_Boot-4.0.3-6DB33F?logo=spring-boot" alt="spring-boot version"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"></a>
+
 # 👨‍🏫 けんぼう予約システム
+
 > **フリーランス家庭教師のための、スマートな授業予約・進捗管理プラットフォーム**
 
 個人で活動する家庭教師が、生徒ごとの授業予約、指導報告、および月謝管理を一元化するためのシステムです。
-
-[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.3-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
-![Gradle](https://img.shields.io/badge/Gradle-9.3.1-02303A?style=for-the-badge&logo=gradle&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
 ---
 
@@ -24,10 +23,10 @@
 ## 🛠️ Technology Stack (技術スタック)
 
 - **Language**: Java 21 (LTS)
-- **Framework**: Spring Boot 4.0.3
+- **Framework**: Spring Boot 4.0.3 (Spring Security)
 - **View Engine**: Thymeleaf + Tailwind CSS
 - **Database**: MySQL 8.0 (Development & Production)
-- **Build Tool**: Gradle (Kotlin DSL)
+- **Build Tool**: Gradle 9.3.1 (Kotlin DSL)
 - **ORM**: Spring Data JPA (Hibernate)
 
 ---
