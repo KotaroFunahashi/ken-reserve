@@ -6,6 +6,7 @@
         "cweijan.vscode-database-client2",
         "usernamehw.errorlens",
         "vscjava.vscode-lombok",
-        "bierner.markdown-mermaid"
+        "bierner.markdown-mermaid",
+        "github.vscode-github-actions"
     ]
 }
