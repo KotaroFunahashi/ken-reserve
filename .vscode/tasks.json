@@ -17,6 +17,25 @@
                 "reveal": "always",
                 "panel": "new"
             }
+        },
+        {
+            "label": "bootRun",
+            "type": "shell",
+            "command": "./gradlew bootRun",
+            "isBackground": true,
+            "dependsOn": [
+                "docker-up"
+            ],
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting KenReserveApplication",
+                    "endsPattern": "Started KenReserveApplication in"
+                }
+            }
         }
     ]
 }
