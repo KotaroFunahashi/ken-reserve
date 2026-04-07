@@ -4,9 +4,10 @@ import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.User;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,10 +15,14 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${app.data-initializer.admin-password}")
+    private String adminPassword;
 
     @Override
     public void run(ApplicationArguments args) {
-        String password = new BCryptPasswordEncoder().encode("password");
+        String password = passwordEncoder.encode(adminPassword);
         if (userRepository.findByLoginId("admin").isEmpty()) {
             userRepository.save(User.builder().loginId("admin").password(password)
                     .displayName("管理者").role(Role.ADMIN).build());
