@@ -24,6 +24,8 @@ public class DataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         String password = passwordEncoder.encode(adminPassword);
         if (userRepository.findByLoginId("admin").isEmpty()) {
+        try {
+            String password = passwordEncoder.encode(adminPassword);
             userRepository.save(User.builder().loginId("admin").password(password)
                     .displayName("管理者").role(Role.ADMIN).build());
         }
