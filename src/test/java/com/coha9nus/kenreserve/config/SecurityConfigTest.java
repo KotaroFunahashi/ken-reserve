@@ -13,7 +13,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -29,19 +28,19 @@ class SecurityConfigTest {
     @Test
     void 未認証ユーザーはホームにアクセスするとログイン画面にリダイレクトされる() throws Exception {
         mockMvc.perform(get("/")).andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
     void 未認証ユーザーはユーザー管理画面にアクセスできない() throws Exception {
         mockMvc.perform(get("/users")).andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
     void 未認証ユーザーは予約管理画面にアクセスできない() throws Exception {
         mockMvc.perform(get("/reservations")).andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     // --- 認証済みアクセス ---
