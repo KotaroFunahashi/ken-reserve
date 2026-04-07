@@ -23,7 +23,6 @@ public class DataInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        String password = passwordEncoder.encode(adminPassword);
         if (userRepository.findByLoginId("admin").isEmpty()) {
         try {
             String password = passwordEncoder.encode(adminPassword);
