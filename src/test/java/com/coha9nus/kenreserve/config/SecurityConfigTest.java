@@ -11,6 +11,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -95,6 +96,8 @@ class SecurityConfigTest {
 
         mockMvc.perform(post("/logout").with(csrf()).session(session))
                 .andExpect(redirectedUrl("/login?logout"));
+
+        assertTrue(session.isInvalid(), "ログアウト後にセッションが無効化されていること");
 
         mockMvc.perform(get("/").session(session)).andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
