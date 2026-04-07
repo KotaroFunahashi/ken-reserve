@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +29,8 @@ public class DataInitializer implements ApplicationRunner {
             String password = passwordEncoder.encode(adminPassword);
             userRepository.save(User.builder().loginId("admin").password(password)
                     .displayName("管理者").role(Role.ADMIN).build());
+        } catch (DataIntegrityViolationException e) {
+            // 別インスタンスが先に挿入済みの場合は正常扱い
         }
     }
 }
