@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -72,5 +74,29 @@ class SecurityConfigTest {
         mockMvc.perform(
                 post("/login").with(csrf()).param("loginId", "nobody").param("password", "wrong"))
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login?error"));
+    }
+
+    // --- ログアウト ---
+
+    @Test
+    @WithMockUser
+    void ログアウトするとログイン画面にリダイレクトされる() throws Exception {
+        mockMvc.perform(post("/logout").with(csrf())).andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?logout"));
+    }
+
+    @Test
+    void ログアウト後はセッションが無効化され保護ページにアクセスするとログイン画面にリダイレクトされる() throws Exception {
+        MvcResult loginResult = mockMvc.perform(
+                post("/login").with(csrf()).param("loginId", "admin").param("password", "password"))
+                .andExpect(redirectedUrl("/")).andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+
+        mockMvc.perform(post("/logout").with(csrf()).session(session))
+                .andExpect(redirectedUrl("/login?logout"));
+
+        mockMvc.perform(get("/").session(session)).andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
     }
 }
