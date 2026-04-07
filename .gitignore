@@ -38,3 +38,6 @@ out/
 
 ### JDKs ###
 .jdks/
+
+### Environment Variables ###
+.env

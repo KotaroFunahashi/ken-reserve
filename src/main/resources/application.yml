@@ -2,10 +2,13 @@ spring:
   application:
     name: ken-reserve
 
+  config:
+    import: optional:file:.env[.properties]
+
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:ken_reserve}
-    username: ${DB_USER:root}
-    password: ${DB_PASS:password}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASS}
     hikari:
       initialization-fail-timeout: 30000
 
@@ -16,4 +19,4 @@ spring:
 
 app:
   data-initializer:
-    admin-password: ${ADMIN_INIT_PASSWORD:password}
+    admin-password: ${ADMIN_INIT_PASSWORD}
