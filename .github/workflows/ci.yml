@@ -28,6 +28,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and test
+        env:
+          DB_HOST: localhost
+          DB_PORT: '3306'
+          DB_NAME: ken_reserve
+          DB_USER: root
+          DB_PASS: password
+          ADMIN_INIT_PASSWORD: password
         run: ./gradlew test --info
 
       - name: Upload test reports
