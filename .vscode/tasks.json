@@ -21,7 +21,7 @@
         {
             "label": "bootRun",
             "type": "shell",
-            "command": "./gradlew bootRun",
+            "command": "./gradlew bootRun -Pdebug",
             "isBackground": true,
             "dependsOn": [
                 "docker-up"
