@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ホーム - けんぼう家庭教師予約システム</title>
+</head>
+
+<body>
+    <h1>けんぼう家庭教師予約システム</h1>
+    <p>ようこそ、<span th:text="${#authentication.name}">ユーザー</span> さん。</p>
+    <nav>
+        <a th:href="@{/users}">生徒管理</a> |
+        <a th:href="@{/reservations}">予約管理</a> |
+        <form th:action="@{/logout}" method="post" class="inline">
+            <button type="submit">ログアウト</button>
+        </form>
+    </nav>
+</body>
+
+</html>

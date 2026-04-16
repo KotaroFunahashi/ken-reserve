@@ -68,7 +68,7 @@ erDiagram
     USERS ||--o{ RESERVATIONS : "makes"
     USERS {
         Long id PK
-        String username "ログインID (必須)"
+        String loginId "ログインID (必須)"
         String password "ハッシュ化パスワード (必須)"
         String display_name "表示名 (必須)"
         String role "ADMIN, TUTOR, STUDENT"
