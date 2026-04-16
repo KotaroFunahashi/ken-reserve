@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ログイン - けんぼう家庭教師予約システム</title>
+</head>
+
+<body>
+    <h1>けんぼう家庭教師予約システム</h1>
+    <h2>ログイン</h2>
+
+    <div th:if="${param.error}">
+        <p>ログインIDまたはパスワードが正しくありません。</p>
+    </div>
+
+    <form th:action="@{/login}" method="post">
+        <div>
+            <label for="loginId">ログインID</label>
+            <input type="text" id="loginId" name="loginId" required>
+        </div>
+        <div>
+            <label for="password">パスワード</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">ログイン</button>
+    </form>
+</body>
+
+</html>
