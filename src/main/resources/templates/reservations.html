@@ -4,6 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <title>予約管理 - けんぼう家庭教師予約システム</title>
+    <style>
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #999; padding: 4px 8px; font-size: 13px; }
+        .msg { padding: 8px; margin: 8px 0; }
+        .msg-ok { background: #dfd; }
+        .msg-err { background: #fcc; }
+    </style>
 </head>
 
 <body>
@@ -11,10 +18,56 @@
     <nav>
         <a th:href="@{/}">ホーム</a> |
         <a th:href="@{/users}">生徒管理</a> |
-        <form th:action="@{/logout}" method="post" class="inline">
+        <a th:href="@{/reservations}">予約管理</a> |
+        <form th:action="@{/logout}" method="post" style="display:inline">
             <button type="submit">ログアウト</button>
         </form>
     </nav>
+
+    <div th:if="${message}" class="msg msg-ok" th:text="${message}"></div>
+    <div th:if="${error}" class="msg msg-err" th:text="${error}"></div>
+
+    <!-- 講師向け: 休暇登録 -->
+    <div th:if="${loginUser.role().name() == 'TUTOR' || loginUser.role().name() == 'ADMIN'}">
+        <h2>休暇登録</h2>
+        <form th:action="@{/reservations/vacation}" method="post">
+            <label>開始: <input type="datetime-local" name="startAt" required></label>
+            <label>終了: <input type="datetime-local" name="endAt" required></label>
+            <button type="submit">登録</button>
+        </form>
+    </div>
+
+    <h2>予約一覧</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>種別</th>
+                <th>講師</th>
+                <th>生徒</th>
+                <th>開始</th>
+                <th>終了</th>
+                <th>ステータス</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="r : ${reservations}">
+                <td th:text="${r.id()}"></td>
+                <td th:text="${r.type()}"></td>
+                <td th:text="${r.tutorName()}"></td>
+                <td th:text="${r.userName() ?: '-'}"></td>
+                <td th:text="${r.startAt()}"></td>
+                <td th:text="${r.endAt()}"></td>
+                <td th:text="${r.status()}"></td>
+                <td>
+                    <form th:action="@{/reservations/delete/{id}(id=${r.id()})}" method="post">
+                        <button type="submit">削除</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 
 </html>
