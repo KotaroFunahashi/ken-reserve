@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ユーザー管理 - けんぼう家庭教師予約システム</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #999;
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+
+        .msg {
+            padding: 8px;
+            margin: 8px 0;
+        }
+
+        .msg-ok {
+            background: #dfd;
+        }
+
+        .msg-err {
+            background: #fcc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ユーザー管理</h1>
+    <nav>
+        <a th:href="@{/}">ホーム</a> |
+        <a th:href="@{/users}">ユーザー管理</a> |
+        <a th:href="@{/reservations}">予約管理</a> |
+        <form th:action="@{/logout}" method="post" style="display:inline">
+            <button type="submit">ログアウト</button>
+        </form>
+    </nav>
+
+    <div th:if="${message}" class="msg msg-ok" th:text="${message}"></div>
+    <div th:if="${error}" class="msg msg-err" th:text="${error}"></div>
+
+    <div th:if="${loginUser.role().name() != 'STUDENT'}">
+        <a th:href="@{/users/new}">+ 新規ユーザー作成</a>
+    </div>
+
+    <h2>ユーザー一覧</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>ログインID</th>
+                <th>表示名</th>
+                <th>ロール</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.id()}"></td>
+                <td th:text="${u.loginId()}"></td>
+                <td th:text="${u.displayName()}"></td>
+                <td th:text="${u.role()}"></td>
+                <td>
+                    <!-- 編集ボタン: ADMIN=全員, TUTOR=STUDENT, STUDENT=自分のみ -->
+                    <a th:if="${loginUser.role().name() == 'ADMIN'
+                        || (loginUser.role().name() == 'TUTOR' and u.role().name() == 'STUDENT')
+                        || loginUser.id() == u.id()}" th:href="@{/users/{id}/edit(id=${u.id()})}">編集</a>
+
+                    <!-- 削除ボタン: ADMIN/TUTORのみ、自分以外 -->
+                    <form th:if="${(loginUser.role().name() == 'ADMIN'
+                            || (loginUser.role().name() == 'TUTOR' and u.role().name() == 'STUDENT'))
+                            and loginUser.id() != u.id()}" th:action="@{/users/{id}/delete(id=${u.id()})}"
+                        method="post" style="display:inline">
+                        <button type="submit" onclick="return confirm('本当に削除しますか？')">削除</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>

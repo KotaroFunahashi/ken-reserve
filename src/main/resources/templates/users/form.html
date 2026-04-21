@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${editId != null ? 'ユーザー編集' : 'ユーザー作成'} + ' - けんぼう家庭教師予約システム'"></title>
+    <style>
+        .field {
+            margin: 8px 0;
+        }
+
+        label {
+            display: inline-block;
+            width: 120px;
+        }
+
+        .error-msg {
+            color: red;
+            font-size: 12px;
+        }
+
+        .msg-err {
+            background: #fcc;
+            padding: 8px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 th:text="${editId != null ? 'ユーザー編集' : 'ユーザー新規作成'}"></h1>
+    <nav>
+        <a th:href="@{/}">ホーム</a> |
+        <a th:href="@{/users}">ユーザー管理</a> |
+        <a th:href="@{/reservations}">予約管理</a>
+    </nav>
+
+    <div th:if="${error}" class="msg-err" th:text="${error}"></div>
+
+    <form th:action="${editId != null ? '/users/' + editId + '/edit' : '/users/new'}" th:object="${userForm}"
+        method="post">
+
+        <div class="field">
+            <label for="loginId">ログインID</label>
+            <input type="text" id="loginId" th:field="*{loginId}" required>
+            <span class="error-msg" th:if="${#fields.hasErrors('loginId')}" th:errors="*{loginId}"></span>
+        </div>
+
+        <div class="field">
+            <label for="password">パスワード</label>
+            <input type="password" id="password" th:field="*{password}" th:required="${editId == null}"
+                th:placeholder="${editId != null ? '変更する場合のみ入力' : ''}">
+            <span class="error-msg" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+        </div>
+
+        <div class="field">
+            <label for="displayName">表示名</label>
+            <input type="text" id="displayName" th:field="*{displayName}" required>
+            <span class="error-msg" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}"></span>
+        </div>
+
+        <div class="field">
+            <label for="role">ロール</label>
+            <!-- ADMINのみ全ロール選択可 -->
+            <select id="role" th:field="*{role}" th:disabled="${loginUser.role().name() != 'ADMIN'}">
+                <option th:if="${loginUser.role().name() == 'ADMIN'}" value="ADMIN">ADMIN</option>
+                <option th:if="${loginUser.role().name() == 'ADMIN'}" value="TUTOR">TUTOR</option>
+                <option value="STUDENT">STUDENT</option>
+            </select>
+            <!-- disabled属性付きselectはsubmitされないので hidden で送出 -->
+            <input th:if="${loginUser.role().name() != 'ADMIN'}" type="hidden" th:name="role"
+                th:value="${userForm.role()}">
+            <span class="error-msg" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></span>
+        </div>
+
+        <div class="field">
+            <button type="submit" th:text="${editId != null ? '更新' : '作成'}"></button>
+            <a th:href="@{/users}">キャンセル</a>
+        </div>
+    </form>
+</body>
+
+</html>
