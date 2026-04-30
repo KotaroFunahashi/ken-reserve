@@ -9,6 +9,7 @@ import com.coha9nus.kenreserve.domain.reservation.ReservationDto;
 import com.coha9nus.kenreserve.domain.reservation.ReservationRepository;
 import com.coha9nus.kenreserve.domain.reservation.ReservationService;
 import com.coha9nus.kenreserve.domain.user.Role;
+import com.coha9nus.kenreserve.exception.NotFoundException;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -53,36 +54,39 @@ public class ReservationController {
             RedirectAttributes redirectAttributes) {
         try {
             reservationService.createVacation(loginUser.id(), startAt, endAt);
-            redirectAttributes.addFlashAttribute("message", "休暇を登録しました。");
         } catch (ReservationConflictException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/reservations";
         }
+        redirectAttributes.addFlashAttribute("message", "休暇を登録しました。");
         return "redirect:/reservations";
     }
 
     @PostMapping("/delete/{id}")
     public String delete(@AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id,
             RedirectAttributes redirectAttributes) {
+        ReservationDto reservation;
         try {
-            ReservationDto reservation = reservationService.getReservation(id);
-
-            // 生徒は自分の予約のみ、前日までキャンセル可能
-            if (loginUser.role() == Role.STUDENT) {
-                if (!loginUser.id().equals(reservation.userId())) {
-                    redirectAttributes.addFlashAttribute("error", "他の生徒の予約は削除できません。");
-                    return "redirect:/reservations";
-                }
-                if (!reservation.startAt().toLocalDate().isAfter(java.time.LocalDate.now())) {
-                    redirectAttributes.addFlashAttribute("error", "当日以降の予約はキャンセルできません。");
-                    return "redirect:/reservations";
-                }
-            }
-
-            reservationRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("message", "予約を削除しました。");
-        } catch (IllegalArgumentException e) {
+            reservation = reservationService.getReservation(id);
+        } catch (NotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/reservations";
         }
+
+        // 生徒は自分の予約のみ、前日までキャンセル可能
+        if (loginUser.role() == Role.STUDENT) {
+            if (!loginUser.id().equals(reservation.userId())) {
+                redirectAttributes.addFlashAttribute("error", "他の生徒の予約は削除できません。");
+                return "redirect:/reservations";
+            }
+            if (!reservation.startAt().toLocalDate().isAfter(java.time.LocalDate.now())) {
+                redirectAttributes.addFlashAttribute("error", "当日以降の予約はキャンセルできません。");
+                return "redirect:/reservations";
+            }
+        }
+
+        reservationRepository.deleteById(id);
+        redirectAttributes.addFlashAttribute("message", "予約を削除しました。");
         return "redirect:/reservations";
     }
 }

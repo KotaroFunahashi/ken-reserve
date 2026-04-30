@@ -12,6 +12,9 @@ import java.util.Map;
 
 import com.coha9nus.kenreserve.domain.user.User;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
+import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
+import com.coha9nus.kenreserve.exception.NotFoundException;
+import com.coha9nus.kenreserve.exception.ValidationException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,9 +124,9 @@ public class ReservationService {
         validateSlotTime(startAt);
 
         User tutor = userRepository.findById(tutorId)
-                .orElseThrow(() -> new IllegalArgumentException("講師が見つかりません: " + tutorId));
+                .orElseThrow(() -> new NotFoundException("講師が見つかりません: " + tutorId));
         User student = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("生徒が見つかりません: " + userId));
+                .orElseThrow(() -> new NotFoundException("生徒が見つかりません: " + userId));
 
         checkConflicts(tutorId, startAt, endAt, null);
 
@@ -145,7 +148,7 @@ public class ReservationService {
     @Transactional
     public ReservationDto createVacation(Long tutorId, LocalDateTime startAt, LocalDateTime endAt) {
         User tutor = userRepository.findById(tutorId)
-                .orElseThrow(() -> new IllegalArgumentException("講師が見つかりません: " + tutorId));
+                .orElseThrow(() -> new NotFoundException("講師が見つかりません: " + tutorId));
 
         // 休暇は既存の予約（バッファなし）と直接重複がないかチェック
         List<Reservation> directConflicts = reservationRepository.findOverlapping(
@@ -172,7 +175,7 @@ public class ReservationService {
     public ReservationDto approveReservation(Long reservationId) {
         Reservation reservation = findReservationById(reservationId);
         if (reservation.getStatus() != ReservationStatus.PENDING) {
-            throw new IllegalStateException("PENDING以外の予約は承認できません。");
+            throw new BusinessRuleViolationException("PENDING以外の予約は承認できません。");
         }
         reservation.updateStatus(ReservationStatus.APPROVED);
         return ReservationDto.from(reservation);
@@ -185,7 +188,7 @@ public class ReservationService {
     public ReservationDto rejectReservation(Long reservationId) {
         Reservation reservation = findReservationById(reservationId);
         if (reservation.getStatus() != ReservationStatus.PENDING) {
-            throw new IllegalStateException("PENDING以外の予約は却下できません。");
+            throw new BusinessRuleViolationException("PENDING以外の予約は却下できません。");
         }
         reservation.updateStatus(ReservationStatus.REJECTED);
         return ReservationDto.from(reservation);
@@ -262,18 +265,18 @@ public class ReservationService {
         LocalTime time = startAt.toLocalTime();
         LocalTime endTime = time.plusMinutes(LESSON_MINUTES);
         if (time.isBefore(SLOT_START) || endTime.isAfter(SLOT_END)) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "予約は " + SLOT_START + " ～ " + SLOT_END + " の範囲内である必要があります。");
         }
         if (time.getMinute() % SLOT_MINUTES != 0) {
-            throw new IllegalArgumentException(
+            throw new ValidationException(
                     "予約は " + SLOT_MINUTES + " 分単位で指定してください。");
         }
     }
 
     private Reservation findReservationById(Long reservationId) {
         return reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("予約が見つかりません: " + reservationId));
+                .orElseThrow(() -> new NotFoundException("予約が見つかりません: " + reservationId));
     }
 
     /** 半開区間 [s1, e1) と [s2, e2) の重複判定 */

@@ -7,6 +7,10 @@ import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.UserDto;
 import com.coha9nus.kenreserve.domain.user.UserForm;
 import com.coha9nus.kenreserve.domain.user.UserService;
+import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
+import com.coha9nus.kenreserve.exception.NotFoundException;
+import com.coha9nus.kenreserve.exception.PermissionDeniedException;
+import com.coha9nus.kenreserve.exception.ValidationException;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -64,13 +68,13 @@ public class UserController {
         }
         try {
             userService.createUser(form, loginUser);
-            redirectAttributes.addFlashAttribute("message", "ユーザーを作成しました。");
-        } catch (IllegalArgumentException | SecurityException e) {
+        } catch (PermissionDeniedException | ValidationException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));
             model.addAttribute("loginUser", loginUser);
             return "users/form";
         }
+        redirectAttributes.addFlashAttribute("message", "ユーザーを作成しました。");
         return "redirect:/users";
     }
 
@@ -110,8 +114,7 @@ public class UserController {
         }
         try {
             userService.updateUser(id, form, loginUser);
-            redirectAttributes.addFlashAttribute("message", "ユーザーを更新しました。");
-        } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
+        } catch (NotFoundException | PermissionDeniedException | ValidationException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("editId", id);
             if (loginUser.role() == Role.ADMIN) {
@@ -120,6 +123,7 @@ public class UserController {
             model.addAttribute("loginUser", loginUser);
             return "users/form";
         }
+        redirectAttributes.addFlashAttribute("message", "ユーザーを更新しました。");
         return "redirect:/users";
     }
 
@@ -129,10 +133,11 @@ public class UserController {
                          RedirectAttributes redirectAttributes) {
         try {
             userService.deleteUser(id, loginUser);
-            redirectAttributes.addFlashAttribute("message", "ユーザーを削除しました。");
-        } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
+        } catch (NotFoundException | BusinessRuleViolationException | PermissionDeniedException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/users";
         }
+        redirectAttributes.addFlashAttribute("message", "ユーザーを削除しました。");
         return "redirect:/users";
     }
 

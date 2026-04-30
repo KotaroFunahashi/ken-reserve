@@ -16,6 +16,8 @@ import java.util.Optional;
 import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.User;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
+import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
+import com.coha9nus.kenreserve.exception.ValidationException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -324,7 +326,7 @@ class ReservationServiceTest {
         void 営業時間外に予約しようとすると例外() {
             assertThatThrownBy(
                     () -> service.createReservation(TUTOR_ID, STUDENT_ID, MON.atTime(8, 0)))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(ValidationException.class);
         }
 
         @Test
@@ -332,14 +334,14 @@ class ReservationServiceTest {
             // 20:30開始 → 21:30終了 → 超過
             assertThatThrownBy(
                     () -> service.createReservation(TUTOR_ID, STUDENT_ID, MON.atTime(20, 30)))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(ValidationException.class);
         }
 
         @Test
         void スロット単位でない時間は例外() {
             assertThatThrownBy(
                     () -> service.createReservation(TUTOR_ID, STUDENT_ID, MON.atTime(10, 15)))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(ValidationException.class);
         }
     }
 
@@ -378,7 +380,7 @@ class ReservationServiceTest {
             given(reservationRepository.findById(1L)).willReturn(Optional.of(r));
 
             assertThatThrownBy(() -> service.approveReservation(1L))
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(BusinessRuleViolationException.class);
         }
 
         @Test
@@ -389,7 +391,7 @@ class ReservationServiceTest {
             given(reservationRepository.findById(1L)).willReturn(Optional.of(r));
 
             assertThatThrownBy(() -> service.rejectReservation(1L))
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(BusinessRuleViolationException.class);
         }
     }
 

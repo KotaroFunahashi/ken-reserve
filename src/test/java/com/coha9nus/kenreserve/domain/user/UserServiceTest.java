@@ -12,6 +12,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.coha9nus.kenreserve.config.LoginUser;
+import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
+import com.coha9nus.kenreserve.exception.PermissionDeniedException;
+import com.coha9nus.kenreserve.exception.ValidationException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -230,15 +233,15 @@ class UserServiceTest {
             UserForm form = new UserForm("t2", "pass", "先生2", Role.TUTOR, null);
 
             assertThatThrownBy(() -> service.createUser(form, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
         void TUTORがADMINを作成しようとすると例外() {
-            UserForm form = new UserForm("a2", "pass", "管理聧2", Role.ADMIN, null);
+            UserForm form = new UserForm("a2", "pass", "管理者2", Role.ADMIN, null);
 
             assertThatThrownBy(() -> service.createUser(form, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -246,7 +249,7 @@ class UserServiceTest {
             UserForm form = new UserForm("s2", "pass", "生徒2", Role.STUDENT, null);
 
             assertThatThrownBy(() -> service.createUser(form, studentLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -255,7 +258,7 @@ class UserServiceTest {
             given(userRepository.findByLoginId("admin")).willReturn(Optional.of(admin));
 
             assertThatThrownBy(() -> service.createUser(form, adminLogin))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ValidationException.class)
                     .hasMessageContaining("既に使用されています");
         }
 
@@ -265,7 +268,7 @@ class UserServiceTest {
             given(userRepository.findByLoginId("new")).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.createUser(form, adminLogin))
-                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("パスワード");
+                    .isInstanceOf(ValidationException.class).hasMessageContaining("パスワード");
         }
         @Test
         void STUDENTを担当講師付きで作成できる() {
@@ -303,7 +306,7 @@ class UserServiceTest {
             given(userRepository.findById(3L)).willReturn(Optional.of(student));
 
             assertThatThrownBy(() -> service.updateUser(3L, form, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -314,7 +317,7 @@ class UserServiceTest {
             given(userRepository.findById(4L)).willReturn(Optional.of(otherTutor));
 
             assertThatThrownBy(() -> service.updateUser(4L, form, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -349,7 +352,7 @@ class UserServiceTest {
             given(userRepository.findById(5L)).willReturn(Optional.of(otherStudent));
 
             assertThatThrownBy(() -> service.updateUser(5L, form, studentLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -380,7 +383,7 @@ class UserServiceTest {
             given(userRepository.findById(3L)).willReturn(Optional.of(student));
 
             assertThatThrownBy(() -> service.updateUser(3L, form, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
         @Test
         void STUDENTの担当講師を更新できる() {
@@ -400,7 +403,7 @@ class UserServiceTest {
             given(userRepository.findById(3L)).willReturn(Optional.of(student));
 
             assertThatThrownBy(() -> service.updateUser(3L, form, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
     }
 
@@ -434,7 +437,7 @@ class UserServiceTest {
             given(userRepository.findById(3L)).willReturn(Optional.of(student));
 
             assertThatThrownBy(() -> service.deleteUser(3L, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -444,7 +447,7 @@ class UserServiceTest {
             given(userRepository.findById(4L)).willReturn(Optional.of(otherTutor));
 
             assertThatThrownBy(() -> service.deleteUser(4L, tutorLogin))
-                    .isInstanceOf(SecurityException.class);
+                    .isInstanceOf(PermissionDeniedException.class);
         }
 
         @Test
@@ -452,7 +455,7 @@ class UserServiceTest {
             given(userRepository.findById(1L)).willReturn(Optional.of(admin));
 
             assertThatThrownBy(() -> service.deleteUser(1L, adminLogin))
-                    .isInstanceOf(IllegalStateException.class).hasMessageContaining("自分自身");
+                    .isInstanceOf(BusinessRuleViolationException.class).hasMessageContaining("自分自身");
         }
     }
 }

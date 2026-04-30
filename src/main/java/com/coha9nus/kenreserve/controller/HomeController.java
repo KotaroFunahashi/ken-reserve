@@ -9,6 +9,8 @@ import com.coha9nus.kenreserve.domain.reservation.ReservationService;
 import com.coha9nus.kenreserve.domain.reservation.WeeklyCalendarDto;
 import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
+import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
+import com.coha9nus.kenreserve.exception.ValidationException;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -61,10 +63,11 @@ public class HomeController {
             RedirectAttributes redirectAttributes) {
         try {
             reservationService.createReservation(tutorId, loginUser.id(), startAt);
-            redirectAttributes.addFlashAttribute("message", "予約を申請しました。");
-        } catch (ReservationConflictException | IllegalArgumentException e) {
+        } catch (ReservationConflictException | ValidationException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/";
         }
+        redirectAttributes.addFlashAttribute("message", "予約を申請しました。");
         return "redirect:/";
     }
 
@@ -72,10 +75,11 @@ public class HomeController {
     public String approve(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             reservationService.approveReservation(id);
-            redirectAttributes.addFlashAttribute("message", "予約を承認しました。");
-        } catch (IllegalStateException e) {
+        } catch (BusinessRuleViolationException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/";
         }
+        redirectAttributes.addFlashAttribute("message", "予約を承認しました。");
         return "redirect:/";
     }
 
@@ -83,10 +87,11 @@ public class HomeController {
     public String reject(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             reservationService.rejectReservation(id);
-            redirectAttributes.addFlashAttribute("message", "予約を却下しました。");
-        } catch (IllegalStateException e) {
+        } catch (BusinessRuleViolationException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/";
         }
+        redirectAttributes.addFlashAttribute("message", "予約を却下しました。");
         return "redirect:/";
     }
 
@@ -96,6 +101,6 @@ public class HomeController {
         }
         // STUDENT/ADMIN: 最初の講師のカレンダーを表示
         return userRepository.findByRole(Role.TUTOR).stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("講師が登録されていません。")).getId();
+                .orElseThrow(() -> new BusinessRuleViolationException("講師が登録されていません。")).getId();
     }
 }

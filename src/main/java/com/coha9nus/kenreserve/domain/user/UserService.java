@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.coha9nus.kenreserve.config.LoginUser;
+import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
+import com.coha9nus.kenreserve.exception.NotFoundException;
+import com.coha9nus.kenreserve.exception.PermissionDeniedException;
+import com.coha9nus.kenreserve.exception.ValidationException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -65,7 +69,7 @@ public class UserService {
 
     public UserDto getUser(Long id) {
         return userRepository.findById(id).map(UserDto::from)
-                .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません: " + id));
+                .orElseThrow(() -> new NotFoundException("ユーザーが見つかりません: " + id));
     }
 
     /**
@@ -78,7 +82,7 @@ public class UserService {
         validateLoginIdUnique(form.loginId(), null);
 
         if (form.password() == null || form.password().isBlank()) {
-            throw new IllegalArgumentException("新規作成時はパスワードが必須です。");
+            throw new ValidationException("新規作成時はパスワードが必須です。");
         }
 
         // TUTORが作成する場合は自分を担当講師に自動セット、ADMINはフォーム入力値を使用
@@ -108,7 +112,7 @@ public class UserService {
     @Transactional
     public UserDto updateUser(Long id, UserForm form, LoginUser loginUser) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません: " + id));
+                .orElseThrow(() -> new NotFoundException("ユーザーが見つかりません: " + id));
 
         validateEditPermission(loginUser, user, form.role());
         validateLoginIdUnique(form.loginId(), id);
@@ -135,10 +139,10 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id, LoginUser loginUser) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません: " + id));
+                .orElseThrow(() -> new NotFoundException("ユーザーが見つかりません: " + id));
 
         if (id.equals(loginUser.id())) {
-            throw new IllegalStateException("自分自身は削除できません。");
+            throw new BusinessRuleViolationException("自分自身は削除できません。");
         }
 
         switch (loginUser.role()) {
@@ -147,10 +151,10 @@ public class UserService {
                 boolean isAssigned = user.getTutors().stream()
                         .anyMatch(t -> t.getId().equals(loginUser.id()));
                 if (!isAssigned) {
-                    throw new SecurityException("担当生徒のみ削除できます。");
+                    throw new PermissionDeniedException("担当生徒のみ削除できます。");
                 }
             }
-            case STUDENT -> throw new SecurityException("削除権限がありません。");
+            case STUDENT -> throw new PermissionDeniedException("削除権限がありません。");
         }
 
         userRepository.delete(user);
@@ -166,7 +170,7 @@ public class UserService {
         if (loginUser.role() == Role.TUTOR && targetRole == Role.STUDENT) {
             return; // TUTORはSTUDENTのみ作成可
         }
-        throw new SecurityException("指定されたロールのユーザーを作成する権限がありません。");
+        throw new PermissionDeniedException("指定されたロールのユーザーを作成する権限がありません。");
     }
 
     /**
@@ -182,13 +186,13 @@ public class UserService {
         if (loginUser.role() == Role.ADMIN) {
             return;
         }
-        throw new SecurityException("編集権限がありません。");
+        throw new PermissionDeniedException("編集権限がありません。");
     }
 
     private void validateLoginIdUnique(String loginId, Long excludeId) {
         userRepository.findByLoginId(loginId).ifPresent(existing -> {
             if (!existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException("ログインID「" + loginId + "」は既に使用されています。");
+                throw new ValidationException("ログインID「" + loginId + "」は既に使用されています。");
             }
         });
     }
