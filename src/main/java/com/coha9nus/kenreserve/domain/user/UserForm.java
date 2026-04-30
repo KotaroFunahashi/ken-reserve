@@ -1,5 +1,7 @@
 package com.coha9nus.kenreserve.domain.user;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,5 +19,7 @@ public record UserForm(
     String displayName,
 
     @NotNull(message = "ロールは必須です。")
-    Role role) {
+    Role role,
+
+    List<Long> tutorIds) {
 }

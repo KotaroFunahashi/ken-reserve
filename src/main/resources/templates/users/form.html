@@ -73,6 +73,19 @@
             <span class="error-msg" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></span>
         </div>
 
+        <!-- 担当講師選択 (ADMIN/TUTORがSTUDENTを作成・編集する場合に表示) -->
+        <div class="field" th:if="${loginUser.role().name() != 'STUDENT' and availableTutors != null and !availableTutors.isEmpty()}">
+            <label>担当講師</label>
+            <select name="tutorIds" multiple size="4">
+                <option th:each="t : ${availableTutors}"
+                        th:value="${t.id()}"
+                        th:text="${t.displayName()}"
+                        th:selected="${userForm.tutorIds() != null and userForm.tutorIds().contains(t.id())}">
+                </option>
+            </select>
+            <span style="font-size:12px;color:#666;">（複数選択可。Ctrlキーを押しながらクリック）</span>
+        </div>
+
         <div class="field">
             <button type="submit" th:text="${editId != null ? '更新' : '作成'}"></button>
             <a th:href="@{/users}">キャンセル</a>

@@ -1,5 +1,7 @@
 package com.coha9nus.kenreserve.controller;
 
+import java.util.List;
+
 import com.coha9nus.kenreserve.config.LoginUser;
 import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.UserDto;
@@ -39,7 +41,12 @@ public class UserController {
         if (loginUser.role() == Role.STUDENT) {
             return "redirect:/users";
         }
-        model.addAttribute("userForm", new UserForm("", "", "", Role.STUDENT));
+        List<UserDto> availableTutors = userService.getAvailableTutors(loginUser);
+        List<Long> defaultTutorIds = (loginUser.role() == Role.TUTOR && !availableTutors.isEmpty())
+                ? List.of(availableTutors.getFirst().id())
+                : null;
+        model.addAttribute("userForm", new UserForm("", "", "", Role.STUDENT, defaultTutorIds));
+        model.addAttribute("availableTutors", availableTutors);
         model.addAttribute("loginUser", loginUser);
         return "users/form";
     }
@@ -51,6 +58,7 @@ public class UserController {
                          Model model,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));
             model.addAttribute("loginUser", loginUser);
             return "users/form";
         }
@@ -59,6 +67,7 @@ public class UserController {
             redirectAttributes.addFlashAttribute("message", "ユーザーを作成しました。");
         } catch (IllegalArgumentException | SecurityException e) {
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));
             model.addAttribute("loginUser", loginUser);
             return "users/form";
         }
@@ -73,8 +82,12 @@ public class UserController {
             return "redirect:/users";
         }
         UserDto user = userService.getUser(id);
-        model.addAttribute("userForm", new UserForm(user.loginId(), "", user.displayName(), user.role()));
+        model.addAttribute("userForm", new UserForm(user.loginId(), "", user.displayName(), user.role(), user.tutorIds()));
         model.addAttribute("editId", id);
+        // 担当講師の変更はADMINのみ許可
+        if (loginUser.role() == Role.ADMIN) {
+            model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));
+        }
         model.addAttribute("loginUser", loginUser);
         return "users/form";
     }
@@ -89,6 +102,9 @@ public class UserController {
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasFieldErrors("loginId") || bindingResult.hasFieldErrors("displayName")) {
             model.addAttribute("editId", id);
+            if (loginUser.role() == Role.ADMIN) {
+                model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));
+            }
             model.addAttribute("loginUser", loginUser);
             return "users/form";
         }
@@ -98,6 +114,9 @@ public class UserController {
         } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("editId", id);
+            if (loginUser.role() == Role.ADMIN) {
+                model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));
+            }
             model.addAttribute("loginUser", loginUser);
             return "users/form";
         }
@@ -119,8 +138,7 @@ public class UserController {
 
     private boolean canEdit(LoginUser loginUser, Long targetId) {
         if (loginUser.role() == Role.ADMIN) return true;
-        if (loginUser.role() == Role.TUTOR) return true;
-        // STUDENTは自分自身のみ編集可
+        // TUTOR / STUDENT は自分自身のみ編集可
         return loginUser.id().equals(targetId);
     }
 }
