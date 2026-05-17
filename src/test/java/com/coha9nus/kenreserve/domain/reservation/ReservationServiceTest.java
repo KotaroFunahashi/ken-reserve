@@ -5,25 +5,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.User;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
 import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
 import com.coha9nus.kenreserve.exception.ValidationException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -36,7 +32,6 @@ class ReservationServiceTest {
     @Mock
     UserRepository userRepository;
 
-    @InjectMocks
     ReservationService service;
 
     static final LocalDate MON = LocalDate.of(2026, 3, 30); // Monday
@@ -52,6 +47,9 @@ class ReservationServiceTest {
                 .role(Role.TUTOR).build();
         student = User.builder().id(STUDENT_ID).loginId("student").password("x").displayName("生徒A")
                 .role(Role.STUDENT).build();
+        service = new ReservationService(
+                reservationRepository, userRepository,
+                new ReservationProperties(LocalTime.of(9, 0), LocalTime.of(21, 0), 30, 60, 30));
     }
 
     // ==================== 半開区間重複判定 ====================

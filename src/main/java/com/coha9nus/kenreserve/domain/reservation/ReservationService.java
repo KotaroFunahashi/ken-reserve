@@ -9,28 +9,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.coha9nus.kenreserve.domain.user.User;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
 import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
 import com.coha9nus.kenreserve.exception.NotFoundException;
 import com.coha9nus.kenreserve.exception.ValidationException;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReservationService {
-
-    static final LocalTime SLOT_START = LocalTime.of(9, 0);
-    static final LocalTime SLOT_END = LocalTime.of(21, 0);
-    static final int SLOT_MINUTES = 30;
-    static final int LESSON_MINUTES = 60;
-    static final int BUFFER_MINUTES = 30;
 
     /** PENDINGとAPPROVEDをブロック対象とするステータス一覧 */
     static final List<ReservationStatus> BLOCKING_STATUSES =
@@ -42,6 +33,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final ReservationProperties reservationProperties;
 
     /**
      * 指定した週の月曜日から日曜日までの週間カレンダーを生成する。
@@ -50,8 +42,8 @@ public class ReservationService {
         LocalDate weekStart = baseDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate weekEnd = weekStart.plusDays(7);
 
-        LocalDateTime queryStart = weekStart.atTime(SLOT_START).minusMinutes(BUFFER_MINUTES);
-        LocalDateTime queryEnd = weekEnd.atTime(SLOT_END).plusMinutes(BUFFER_MINUTES);
+        LocalDateTime queryStart = weekStart.atTime(reservationProperties.slotStart()).minusMinutes(reservationProperties.bufferMinutes());
+        LocalDateTime queryEnd = weekEnd.atTime(reservationProperties.slotEnd()).plusMinutes(reservationProperties.bufferMinutes());
 
         List<Reservation> reservations = reservationRepository.findByTutorAndPeriod(
                 tutorId, queryStart, queryEnd, EXCLUDED_STATUSES);
@@ -70,16 +62,16 @@ public class ReservationService {
 
     List<CalendarSlotDto> buildSlotsForDay(LocalDate date, List<Reservation> reservations) {
         List<CalendarSlotDto> slots = new ArrayList<>();
-        LocalTime time = SLOT_START;
+        LocalTime time = reservationProperties.slotStart();
 
-        while (time.isBefore(SLOT_END)) {
+        while (time.isBefore(reservationProperties.slotEnd())) {
             LocalDateTime slotStart = date.atTime(time);
-            LocalDateTime slotEnd = slotStart.plusMinutes(SLOT_MINUTES);
+            LocalDateTime slotEnd = slotStart.plusMinutes(reservationProperties.slotMinutes());
 
             CalendarSlotDto slot = determineSlotStatus(date, time, slotStart, slotEnd, reservations);
             slots.add(slot);
 
-            time = time.plusMinutes(SLOT_MINUTES);
+            time = time.plusMinutes(reservationProperties.slotMinutes());
         }
         return slots;
     }
@@ -103,8 +95,8 @@ public class ReservationService {
 
         for (Reservation r : reservations) {
             if (r.getType() == ReservationType.RESERVATION) {
-                LocalDateTime bufferStart = r.getStartAt().minusMinutes(BUFFER_MINUTES);
-                LocalDateTime bufferEnd = r.getEndAt().plusMinutes(BUFFER_MINUTES);
+                LocalDateTime bufferStart = r.getStartAt().minusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime bufferEnd = r.getEndAt().plusMinutes(reservationProperties.bufferMinutes());
                 if (overlaps(slotStart, slotEnd, bufferStart, bufferEnd)) {
                     return CalendarSlotDto.buffer(date, time);
                 }
@@ -119,7 +111,7 @@ public class ReservationService {
      */
     @Transactional
     public ReservationDto createReservation(Long tutorId, Long userId, LocalDateTime startAt) {
-        LocalDateTime endAt = startAt.plusMinutes(LESSON_MINUTES);
+        LocalDateTime endAt = startAt.plusMinutes(reservationProperties.lessonMinutes());
 
         validateSlotTime(startAt);
 
@@ -224,8 +216,8 @@ public class ReservationService {
      * PENDING予約同士のバッファ重複は許可する（同一時間帯の直接重複は禁止）。
      */
     void checkConflicts(Long tutorId, LocalDateTime startAt, LocalDateTime endAt, Long excludeId) {
-        LocalDateTime queryStart = startAt.minusMinutes(BUFFER_MINUTES * 2L);
-        LocalDateTime queryEnd = endAt.plusMinutes(BUFFER_MINUTES * 2L);
+        LocalDateTime queryStart = startAt.minusMinutes(reservationProperties.bufferMinutes() * 2L);
+        LocalDateTime queryEnd = endAt.plusMinutes(reservationProperties.bufferMinutes() * 2L);
 
         List<Reservation> candidates = reservationRepository.findOverlapping(
                 tutorId, queryStart, queryEnd, EXCLUDED_STATUSES);
@@ -242,10 +234,10 @@ public class ReservationService {
                 }
             } else if (existing.getStatus() == ReservationStatus.APPROVED) {
                 // APPROVED予約とはバッファ込みで衝突チェック
-                LocalDateTime existingBufferStart = existing.getStartAt().minusMinutes(BUFFER_MINUTES);
-                LocalDateTime existingBufferEnd = existing.getEndAt().plusMinutes(BUFFER_MINUTES);
-                LocalDateTime newBufferStart = startAt.minusMinutes(BUFFER_MINUTES);
-                LocalDateTime newBufferEnd = endAt.plusMinutes(BUFFER_MINUTES);
+                LocalDateTime existingBufferStart = existing.getStartAt().minusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime existingBufferEnd = existing.getEndAt().plusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime newBufferStart = startAt.minusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime newBufferEnd = endAt.plusMinutes(reservationProperties.bufferMinutes());
 
                 if (overlaps(newBufferStart, newBufferEnd, existingBufferStart, existingBufferEnd)) {
                     throw new ReservationConflictException(
@@ -263,14 +255,14 @@ public class ReservationService {
 
     private void validateSlotTime(LocalDateTime startAt) {
         LocalTime time = startAt.toLocalTime();
-        LocalTime endTime = time.plusMinutes(LESSON_MINUTES);
-        if (time.isBefore(SLOT_START) || endTime.isAfter(SLOT_END)) {
+        LocalTime endTime = time.plusMinutes(reservationProperties.lessonMinutes());
+        if (time.isBefore(reservationProperties.slotStart()) || endTime.isAfter(reservationProperties.slotEnd())) {
             throw new ValidationException(
-                    "予約は " + SLOT_START + " ～ " + SLOT_END + " の範囲内である必要があります。");
+                    "予約は " + reservationProperties.slotStart() + " ～ " + reservationProperties.slotEnd() + " の範囲内である必要があります。");
         }
-        if (time.getMinute() % SLOT_MINUTES != 0) {
+        if (time.getMinute() % reservationProperties.slotMinutes() != 0) {
             throw new ValidationException(
-                    "予約は " + SLOT_MINUTES + " 分単位で指定してください。");
+                    "予約は " + reservationProperties.slotMinutes() + " 分単位で指定してください。");
         }
     }
 
