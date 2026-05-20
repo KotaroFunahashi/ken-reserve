@@ -279,7 +279,31 @@ class UserServiceTest {
 
             assertThat(result.role()).isEqualTo(Role.STUDENT);
             assertThat(result.tutorIds()).containsExactly(2L);
-        }    }
+        }
+
+        @Test
+        void TUTOR以外のIDをtutorIdに指定すると例外() {
+            // admin (ADMIN ロール) を tutorId として渡す
+            UserForm form = new UserForm("new_st", "pass", "新生徒", Role.STUDENT, List.of(1L));
+            given(userRepository.findByLoginId("new_st")).willReturn(Optional.empty());
+            given(userRepository.findAllById(List.of(1L))).willReturn(List.of(admin));
+
+            assertThatThrownBy(() -> service.createUser(form, adminLogin))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessageContaining("講師ロールではないユーザーID");
+        }
+
+        @Test
+        void 存在しないIDをtutorIdに指定すると例外() {
+            UserForm form = new UserForm("new_st", "pass", "新生徒", Role.STUDENT, List.of(999L));
+            given(userRepository.findByLoginId("new_st")).willReturn(Optional.empty());
+            given(userRepository.findAllById(List.of(999L))).willReturn(List.of());
+
+            assertThatThrownBy(() -> service.createUser(form, adminLogin))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessageContaining("存在しないユーザーID");
+        }
+    }
 
     // ==================== 編集権限 ====================
 

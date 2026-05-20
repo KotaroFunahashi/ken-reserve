@@ -199,6 +199,23 @@ public class UserService {
         if (tutorIds == null || tutorIds.isEmpty()) {
             return new HashSet<>();
         }
-        return new HashSet<>(userRepository.findAllById(tutorIds));
+        List<User> users = userRepository.findAllById(tutorIds);
+
+        List<Long> notFoundIds = tutorIds.stream()
+                .filter(id -> users.stream().noneMatch(u -> u.getId().equals(id)))
+                .toList();
+        if (!notFoundIds.isEmpty()) {
+            throw new ValidationException("存在しないユーザーIDが指定されました: " + notFoundIds);
+        }
+
+        List<Long> nonTutorIds = users.stream()
+                .filter(u -> u.getRole() != Role.TUTOR)
+                .map(User::getId)
+                .toList();
+        if (!nonTutorIds.isEmpty()) {
+            throw new ValidationException("講師ロールではないユーザーIDが指定されました: " + nonTutorIds);
+        }
+
+        return new HashSet<>(users);
     }
 }
