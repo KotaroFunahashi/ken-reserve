@@ -2,7 +2,6 @@ package com.coha9nus.kenreserve.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 import com.coha9nus.kenreserve.config.LoginUser;
 import com.coha9nus.kenreserve.domain.reservation.ReservationConflictException;
 import com.coha9nus.kenreserve.domain.reservation.ReservationService;
@@ -11,7 +10,6 @@ import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.UserRepository;
 import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
 import com.coha9nus.kenreserve.exception.ValidationException;
-
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -61,6 +58,10 @@ public class HomeController {
             @RequestParam Long tutorId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startAt,
             RedirectAttributes redirectAttributes) {
+        if (loginUser.role() != Role.STUDENT) {
+            redirectAttributes.addFlashAttribute("error", "予約できるのは生徒のみです。");
+            return "redirect:/";
+        }
         try {
             reservationService.createReservation(tutorId, loginUser.id(), startAt);
         } catch (ReservationConflictException | ValidationException e) {

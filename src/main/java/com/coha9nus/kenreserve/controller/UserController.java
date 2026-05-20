@@ -1,7 +1,6 @@
 package com.coha9nus.kenreserve.controller;
 
 import java.util.List;
-
 import com.coha9nus.kenreserve.config.LoginUser;
 import com.coha9nus.kenreserve.domain.user.Role;
 import com.coha9nus.kenreserve.domain.user.UserDto;
@@ -11,7 +10,6 @@ import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
 import com.coha9nus.kenreserve.exception.NotFoundException;
 import com.coha9nus.kenreserve.exception.PermissionDeniedException;
 import com.coha9nus.kenreserve.exception.ValidationException;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -104,7 +101,9 @@ public class UserController {
                          BindingResult bindingResult,
                          Model model,
                          RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasFieldErrors("loginId") || bindingResult.hasFieldErrors("displayName")) {
+        boolean passwordHasError = !form.password().isBlank() && bindingResult.hasFieldErrors("password");
+        if (bindingResult.hasFieldErrors("loginId") || bindingResult.hasFieldErrors("displayName")
+                || bindingResult.hasFieldErrors("role") || passwordHasError) {
             model.addAttribute("editId", id);
             if (loginUser.role() == Role.ADMIN) {
                 model.addAttribute("availableTutors", userService.getAvailableTutors(loginUser));

@@ -157,7 +157,7 @@ public class ReservationService {
     }
 
     /**
-     * 予約を承認する。
+     * 予約を承認する。承認前に既存APPROVED予約・休暇との衝突チェックを行う。
      */
     @Transactional
     public ReservationDto approveReservation(Long reservationId) {
@@ -165,6 +165,7 @@ public class ReservationService {
         if (reservation.getStatus() != ReservationStatus.PENDING) {
             throw new BusinessRuleViolationException("PENDING以外の予約は承認できません。");
         }
+        checkConflictsForApproval(reservation);
         reservation.updateStatus(ReservationStatus.APPROVED);
         return ReservationDto.from(reservation);
     }
@@ -204,6 +205,40 @@ public class ReservationService {
      */
     public ReservationDto getReservation(Long reservationId) {
         return ReservationDto.from(findReservationById(reservationId));
+    }
+
+    /**
+     * 承認時の衝突チェック。
+     * 既存のAPPROVED予約（休暇含む）に対してのみ検証する。
+     * PENDING予約は対象外（作成時に直接重複は排除済み）。
+     */
+    void checkConflictsForApproval(Reservation target) {
+        Long tutorId = target.getTutor().getId();
+        LocalDateTime startAt = target.getStartAt();
+        LocalDateTime endAt = target.getEndAt();
+
+        LocalDateTime queryStart = startAt.minusMinutes(reservationProperties.bufferMinutes() * 2L);
+        LocalDateTime queryEnd = endAt.plusMinutes(reservationProperties.bufferMinutes() * 2L);
+
+        List<Reservation> candidates = reservationRepository.findOverlapping(
+                tutorId, queryStart, queryEnd, List.of(ReservationStatus.APPROVED));
+
+        for (Reservation existing : candidates) {
+            if (existing.getType() == ReservationType.VACATION) {
+                if (overlaps(startAt, endAt, existing.getStartAt(), existing.getEndAt())) {
+                    throw new ReservationConflictException("指定の時間帯は講師の休暇と重複しています。");
+                }
+            } else {
+                LocalDateTime existingBufferStart = existing.getStartAt().minusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime existingBufferEnd = existing.getEndAt().plusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime newBufferStart = startAt.minusMinutes(reservationProperties.bufferMinutes());
+                LocalDateTime newBufferEnd = endAt.plusMinutes(reservationProperties.bufferMinutes());
+
+                if (overlaps(newBufferStart, newBufferEnd, existingBufferStart, existingBufferEnd)) {
+                    throw new ReservationConflictException("指定の時間帯は承認済みの予約（バッファ含む）と重複しています。");
+                }
+            }
+        }
     }
 
     /**

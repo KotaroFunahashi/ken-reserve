@@ -391,6 +391,39 @@ class ReservationServiceTest {
             assertThatThrownBy(() -> service.rejectReservation(1L))
                     .isInstanceOf(BusinessRuleViolationException.class);
         }
+
+        @Test
+        void 承認時に既存APPROVED予約とバッファ重複する場合は例外() {
+            // PENDING: 11:00-12:00
+            // 既存APPROVED: 10:00-11:00 → バッファ圏が重複（PENDING作成時は許可されていた）
+            Reservation pending = Reservation.builder().id(1L).tutor(tutor).user(student)
+                    .type(ReservationType.RESERVATION).status(ReservationStatus.PENDING)
+                    .startAt(dt(11, 0)).endAt(dt(12, 0)).build();
+            Reservation approved = approvedReservation(10, 0, 11, 0);
+
+            given(reservationRepository.findById(1L)).willReturn(Optional.of(pending));
+            given(reservationRepository.findOverlapping(eq(TUTOR_ID), any(), any(), any()))
+                    .willReturn(List.of(approved));
+
+            assertThatThrownBy(() -> service.approveReservation(1L))
+                    .isInstanceOf(ReservationConflictException.class);
+        }
+
+        @Test
+        void 承認時に休暇と直接重複する場合は例外() {
+            // PENDING: 14:00-15:00, 休暇: 13:00-17:00
+            Reservation pending = Reservation.builder().id(1L).tutor(tutor).user(student)
+                    .type(ReservationType.RESERVATION).status(ReservationStatus.PENDING)
+                    .startAt(dt(14, 0)).endAt(dt(15, 0)).build();
+            Reservation vac = vacation(13, 0, 17, 0);
+
+            given(reservationRepository.findById(1L)).willReturn(Optional.of(pending));
+            given(reservationRepository.findOverlapping(eq(TUTOR_ID), any(), any(), any()))
+                    .willReturn(List.of(vac));
+
+            assertThatThrownBy(() -> service.approveReservation(1L))
+                    .isInstanceOf(ReservationConflictException.class);
+        }
     }
 
     // ==================== ヘルパー ====================
