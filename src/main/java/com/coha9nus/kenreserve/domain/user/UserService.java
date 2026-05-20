@@ -122,7 +122,7 @@ public class UserService {
         }
 
         // ロール変更はADMINのみ許可
-        if (loginUser.role() == Role.ADMIN && form.role() != null) {
+        if (loginUser.role() == Role.ADMIN) {
             user.updateRole(form.role());
         }
 
