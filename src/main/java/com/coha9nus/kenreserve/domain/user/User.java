@@ -3,10 +3,8 @@ package com.coha9nus.kenreserve.domain.user;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -66,6 +64,10 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void updateLoginId(String loginId) {
+        this.loginId = loginId;
+    }
 
     public void updateDisplayName(String displayName) {
         this.displayName = displayName;

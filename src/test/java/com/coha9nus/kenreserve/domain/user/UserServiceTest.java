@@ -6,16 +6,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
 import com.coha9nus.kenreserve.config.LoginUser;
 import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
 import com.coha9nus.kenreserve.exception.PermissionDeniedException;
 import com.coha9nus.kenreserve.exception.ValidationException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -404,6 +401,28 @@ class UserServiceTest {
 
             assertThatThrownBy(() -> service.updateUser(3L, form, tutorLogin))
                     .isInstanceOf(PermissionDeniedException.class);
+        }
+
+        @Test
+        void ログインIDを更新できる() {
+            UserForm form = new UserForm("student_new", null, "生徒A", Role.STUDENT, null);
+            given(userRepository.findById(3L)).willReturn(Optional.of(student));
+            given(userRepository.findByLoginId("student_new")).willReturn(Optional.empty());
+
+            UserDto result = service.updateUser(3L, form, adminLogin);
+
+            assertThat(result.loginId()).isEqualTo("student_new");
+        }
+
+        @Test
+        void 重複ログインIDで更新すると例外() {
+            UserForm form = new UserForm("admin", null, "生徒A", Role.STUDENT, null);
+            given(userRepository.findById(3L)).willReturn(Optional.of(student));
+            given(userRepository.findByLoginId("admin")).willReturn(Optional.of(admin));
+
+            assertThatThrownBy(() -> service.updateUser(3L, form, adminLogin))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessageContaining("既に使用されています");
         }
     }
 

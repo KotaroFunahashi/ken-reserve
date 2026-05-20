@@ -4,17 +4,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import com.coha9nus.kenreserve.config.LoginUser;
 import com.coha9nus.kenreserve.exception.BusinessRuleViolationException;
 import com.coha9nus.kenreserve.exception.NotFoundException;
 import com.coha9nus.kenreserve.exception.PermissionDeniedException;
 import com.coha9nus.kenreserve.exception.ValidationException;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -117,6 +114,7 @@ public class UserService {
         validateEditPermission(loginUser, user, form.role());
         validateLoginIdUnique(form.loginId(), id);
 
+        user.updateLoginId(form.loginId());
         user.updateDisplayName(form.displayName());
 
         if (form.password() != null && !form.password().isBlank()) {
