@@ -27,10 +27,6 @@ public class ReservationService {
     static final List<ReservationStatus> BLOCKING_STATUSES =
             List.of(ReservationStatus.PENDING, ReservationStatus.APPROVED);
 
-    /** カレンダー/衝突チェックから除外するステータス */
-    static final List<ReservationStatus> EXCLUDED_STATUSES =
-            List.of(ReservationStatus.REJECTED);
-
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final ReservationProperties reservationProperties;
@@ -46,7 +42,7 @@ public class ReservationService {
         LocalDateTime queryEnd = weekEnd.atTime(reservationProperties.slotEnd()).plusMinutes(reservationProperties.bufferMinutes());
 
         List<Reservation> reservations = reservationRepository.findByTutorAndPeriod(
-                tutorId, queryStart, queryEnd, EXCLUDED_STATUSES);
+                tutorId, queryStart, queryEnd, BLOCKING_STATUSES);
 
         List<LocalDate> dates = new ArrayList<>();
         Map<LocalDate, List<CalendarSlotDto>> slotsByDate = new LinkedHashMap<>();
@@ -120,7 +116,7 @@ public class ReservationService {
         User student = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("生徒が見つかりません: " + userId));
 
-        checkConflicts(tutorId, startAt, endAt, null);
+        checkConflicts(tutorId, startAt, endAt);
 
         Reservation reservation = Reservation.builder()
                 .tutor(tutor)
@@ -144,7 +140,7 @@ public class ReservationService {
 
         // 休暇は既存の予約（バッファなし）と直接重複がないかチェック
         List<Reservation> directConflicts = reservationRepository.findOverlapping(
-                tutorId, startAt, endAt, EXCLUDED_STATUSES);
+                tutorId, startAt, endAt, BLOCKING_STATUSES);
         if (!directConflicts.isEmpty()) {
             throw new ReservationConflictException("指定の時間帯に既存の予約があるため、休暇を登録できません。");
         }
@@ -215,18 +211,14 @@ public class ReservationService {
      * APPROVED予約とはバッファ込みで衝突を禁止。
      * PENDING予約同士のバッファ重複は許可する（同一時間帯の直接重複は禁止）。
      */
-    void checkConflicts(Long tutorId, LocalDateTime startAt, LocalDateTime endAt, Long excludeId) {
+    void checkConflicts(Long tutorId, LocalDateTime startAt, LocalDateTime endAt) {
         LocalDateTime queryStart = startAt.minusMinutes(reservationProperties.bufferMinutes() * 2L);
         LocalDateTime queryEnd = endAt.plusMinutes(reservationProperties.bufferMinutes() * 2L);
 
         List<Reservation> candidates = reservationRepository.findOverlapping(
-                tutorId, queryStart, queryEnd, EXCLUDED_STATUSES);
+                tutorId, queryStart, queryEnd, BLOCKING_STATUSES);
 
         for (Reservation existing : candidates) {
-            if (excludeId != null && excludeId.equals(existing.getId())) {
-                continue;
-            }
-
             if (existing.getType() == ReservationType.VACATION) {
                 if (overlaps(startAt, endAt, existing.getStartAt(), existing.getEndAt())) {
                     throw new ReservationConflictException(
