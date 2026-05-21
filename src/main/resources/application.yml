@@ -18,5 +18,11 @@ spring:
     show-sql: true
 
 app:
+  reservation:
+    slot-start: "09:00"
+    slot-end: "21:00"
+    slot-minutes: 30
+    lesson-minutes: 60
+    buffer-minutes: 30
   data-initializer:
     admin-password: ${ADMIN_INIT_PASSWORD}
